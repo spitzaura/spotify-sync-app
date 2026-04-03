@@ -1079,28 +1079,6 @@ export default function Trades() {
         </div>
       )}
 
-      {/* Past */}
-      {pastTrades.length > 0 && (
-        <div>
-          <h2 className="text-lg font-bold mb-3 text-spotify-light">Past ({pastTrades.length})</h2>
-          <div className="space-y-2">
-            {pastTrades.map(trade => (
-              <div key={trade.id} className="bg-gray-800/30 rounded-lg px-4 py-3 opacity-50">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="font-medium text-sm">{trade.name || 'Unnamed'}</span>
-                    <span className="text-xs text-spotify-light ml-2">
-                      {trade.track_uris.length} tracks · {trade.status === 'expired' ? '⏰ Expired' : '✕ Cancelled'}
-                    </span>
-                  </div>
-                  <span className="text-xs text-spotify-light">{fmtDate(trade.expires_at)}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {showPicker && (
         <PlaylistPicker accounts={accounts}
           excludeIds={selectedPlaylists.map(p => p.playlistId)}
