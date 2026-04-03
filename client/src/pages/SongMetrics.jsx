@@ -273,22 +273,26 @@ export default function SongMetrics() {
                         <div className={`text-3xl font-bold ${scoreColor}`}>{qualityScore.toFixed(0)}</div>
                       </div>
                       
-                      <div className="grid grid-cols-4 gap-3 mb-4">
+                      <div className="grid grid-cols-5 gap-3 mb-4">
                         <div className="bg-gray-800/50 rounded p-3">
                           <div className="text-xs text-gray-400">Skip %</div>
-                          <div className={`text-xl font-bold ${skipRatio > 60 ? 'text-red-400' : 'text-orange-400'}`}>{skipRatio.toFixed(0)}%</div>
+                          <div className={`text-lg font-bold ${skipRatio > 60 ? 'text-red-400' : skipRatio > 40 ? 'text-orange-400' : 'text-green-400'}`}>{skipRatio.toFixed(0)}%</div>
                         </div>
                         <div className="bg-gray-800/50 rounded p-3">
                           <div className="text-xs text-gray-400">Save %</div>
-                          <div className={`text-xl font-bold ${saveRatio < 20 ? 'text-red-400' : 'text-yellow-400'}`}>{saveRatio.toFixed(1)}%</div>
+                          <div className={`text-lg font-bold ${saveRatio < 10 ? 'text-red-400' : saveRatio < 20 ? 'text-orange-400' : 'text-green-400'}`}>{saveRatio.toFixed(1)}%</div>
                         </div>
                         <div className="bg-gray-800/50 rounded p-3">
                           <div className="text-xs text-gray-400">Radio %</div>
-                          <div className={`text-xl font-bold ${radioPercent < 10 ? 'text-red-400' : 'text-blue-400'}`}>{radioPercent.toFixed(1)}%</div>
+                          <div className={`text-lg font-bold ${radioPercent < 5 ? 'text-red-400' : radioPercent < 15 ? 'text-orange-400' : 'text-blue-400'}`}>{radioPercent.toFixed(1)}%</div>
                         </div>
                         <div className="bg-gray-800/50 rounded p-3">
-                          <div className="text-xs text-gray-400">Streams</div>
-                          <div className="text-xl font-bold text-green-400">{(m.streams || 0).toLocaleString()}</div>
+                          <div className="text-xs text-gray-400">Streams/Day</div>
+                          <div className="text-lg font-bold text-green-400">{((m.streams || 0) / Math.max(1, m.days_since_release || 1)).toFixed(0)}</div>
+                        </div>
+                        <div className="bg-gray-800/50 rounded p-3">
+                          <div className="text-xs text-gray-400">Total Streams</div>
+                          <div className="text-lg font-bold text-blue-400">{(m.streams || 0).toLocaleString()}</div>
                         </div>
                       </div>
                       
