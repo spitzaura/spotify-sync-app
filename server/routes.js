@@ -185,6 +185,18 @@ router.get('/api/accounts/debug/token-status', asyncHandler(async (req, res) => 
   res.json({ accounts: status, now: new Date(now).toISOString() });
 }));
 
+// MANUAL: Refresh all tokens now (endpoint for manual trigger)
+router.post('/api/accounts/refresh-tokens-now', asyncHandler(async (req, res) => {
+  console.log('[MANUAL] Token refresh triggered via API');
+  const result = await spotify.refreshAllTokens();
+  res.json({ 
+    status: 'complete',
+    refreshed: result.refreshed,
+    failed: result.failed,
+    timestamp: new Date().toISOString()
+  });
+}));
+
 // AUTO-CORRECT: Fix any legacy accounts with auth_app_key='default' by mapping to dedicated apps
 router.post('/api/accounts/fix-legacy-mapping', asyncHandler(async (req, res) => {
   const accounts = store.getAllAccounts();
