@@ -124,9 +124,12 @@ async function spotifyFetch(accountId, endpoint, options = {}) {
     },
   });
 
-  // Handle rate limiting — wait up to 60s, then skip
+  // Handle rate limiting — track when accounts are blocked
   if (response.status === 429) {
     const retryAfter = parseInt(response.headers.get('retry-after') || '3', 10);
+    const rateLimitKey = `rate_limit_${accountId}`;
+    store.setCache(rateLimitKey, { blockedUntil: Date.now() + (retryAfter * 1000) }, Math.ceil(retryAfter / 60));
+    
     if (retryAfter > 60) {
       throw new Error(`Rate limited for ${retryAfter}s — too long, skipping`);
     }
@@ -204,6 +207,24 @@ function findDuplicates(trackUris) {
   return duplicates;
 }
 
+// Check if account is currently rate limited
+function isAccountRateLimited(accountId) {
+  const rateLimitKey = `rate_limit_${accountId}`;
+  const cached = store.getCache(rateLimitKey);
+  if (!cached) return false;
+  const isBlocked = cached.blockedUntil > Date.now();
+  if (!isBlocked) {
+    store.clearCache(rateLimitKey); // Clear expired block
+  }
+  return isBlocked;
+}
+
+// Get list of available (non-rate-limited) accounts
+function getAvailableAccounts() {
+  const allAccounts = store.getAllAccounts();
+  return allAccounts.filter(acc => !isAccountRateLimited(acc.id));
+}
+
 // Sync: nuke all child tracks, re-add from master (fresh "just added" dates)
 // Each account uses its own Client ID = its own rate limit
 async function syncGroup(groupId, { onProgress, childIds } = {}) {
@@ -215,6 +236,13 @@ async function syncGroup(groupId, { onProgress, childIds } = {}) {
   if (!group.children || group.children.length === 0) {
     throw new Error('Group has no child playlists');
   }
+  
+  // Check if any accounts are available (not rate limited)
+  const availableAccounts = getAvailableAccounts();
+  if (availableAccounts.length === 0) {
+    throw new Error('All Spotify accounts are rate-limited. Please wait ~24 hours and try again.');
+  }
+  console.log(`Available accounts for sync: ${availableAccounts.length}/${store.getAllAccounts().length}`);
 
   // Filter children if childIds provided
   const childrenToSync = childIds && childIds.length > 0
@@ -225,18 +253,41 @@ async function syncGroup(groupId, { onProgress, childIds } = {}) {
     throw new Error('No matching child playlists to sync');
   }
 
-  // Get master tracks (ordered)
-  const masterTracks = await getAllPlaylistTracks(group.master_account_id, group.master_playlist_id);
-  console.log(`Syncing group "${group.name}": ${masterTracks.length} master tracks → ${childrenToSync.length} children`);
+  // Get master tracks (try with master account first, then fallback to other accounts if rate limited)
+  let masterTracks;
+  let fetchAccountId = group.master_account_id;
+  
+  try {
+    masterTracks = await getAllPlaylistTracks(group.master_account_id, group.master_playlist_id);
+  } catch (err) {
+    if (err.message.includes('Rate limited')) {
+      console.log(`Rate limited on master account, trying with other accounts...`);
+      const allAccounts = store.getAllAccounts();
+      for (const account of allAccounts) {
+        if (account.id === group.master_account_id) continue; // Skip master
+        try {
+          masterTracks = await getAllPlaylistTracks(account.id, group.master_playlist_id);
+          fetchAccountId = account.id;
+          console.log(`Successfully fetched master tracks with fallback account: ${account.email}`);
+          break;
+        } catch (e) {
+          continue;
+        }
+      }
+    }
+    if (!masterTracks) throw err;
+  }
+  
+  console.log(`Syncing group "${group.name}": ${masterTracks.length} master tracks → ${childrenToSync.length} children (fetched with account: ${fetchAccountId})`);
 
-  // Cache the master playlist tracks immediately (1-hour TTL)
+  // Cache the master playlist tracks (24-hour TTL to avoid unnecessary API calls)
   const masterCacheKey = `sync_cache_${group.master_playlist_id}`;
   store.setCache(masterCacheKey, {
     trackUris: masterTracks,
     trackCount: masterTracks.length,
     cachedAt: new Date().toISOString(),
     image: null,
-  }, 60);
+  }, 1440); // 24 hours
 
   // Check for duplicates
   const duplicates = findDuplicates(masterTracks);
