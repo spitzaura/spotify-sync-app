@@ -1107,6 +1107,43 @@ export default function Trades() {
           onSelect={d => { setSelectedPlaylists(prev => [...prev.filter(p => p.playlistId !== d.playlistId), d]); }}
           onCancel={() => setShowPicker(false)} />
       )}
+
+      {/* PAST TRADES LIST */}
+      {!loading && trades.length > 0 && (
+        <div className="mt-12 bg-gray-800/30 border border-purple-900/30 rounded-lg p-6">
+          <h2 className="text-2xl font-bold text-white mb-4">📋 Past Trades ({trades.length})</h2>
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {trades.map(trade => {
+              const now = new Date();
+              const expires = new Date(trade.expires_at + (trade.expires_at.includes('Z') ? '' : 'Z'));
+              const daysLeft = Math.ceil((expires - now) / (1000 * 60 * 60 * 24));
+              const isExpired = daysLeft <= 0;
+              
+              return (
+                <div key={trade.id} className={`p-4 rounded border ${
+                  isExpired ? 'bg-red-900/20 border-red-700/30' : 
+                  daysLeft <= 7 ? 'bg-yellow-900/20 border-yellow-700/30' : 
+                  'bg-purple-900/20 border-purple-700/30'
+                }`}>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-semibold text-white">{trade.name || 'Unnamed Trade'}</p>
+                      <p className="text-sm text-gray-300 mt-1">Created: {fmtDate(trade.created_at)}</p>
+                      <p className="text-sm text-gray-300">Expires: {fmtDate(trade.expires_at)}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-sm font-bold ${getDaysColor(daysLeft)}`}>
+                        {isExpired ? 'EXPIRED' : `${daysLeft}d left`}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">Status: {trade.status}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
