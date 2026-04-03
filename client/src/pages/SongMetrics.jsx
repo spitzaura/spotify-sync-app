@@ -245,8 +245,70 @@ export default function SongMetrics() {
         </div>
       )}
 
-      {/* TABLE */}
-      {(activeTab === 'all' || activeTab === 'removal') && metricsLoading ? (
+      {/* REMOVAL TAB - CARD VIEW */}
+      {activeTab === 'removal' && (
+        <div className="space-y-4">
+          {metricsLoading ? (
+            <div className="text-center py-8 text-gray-400">Loading...</div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-8 text-gray-400">No songs flagged for removal</div>
+          ) : (
+            <>
+              <div className="grid gap-4">
+                {filtered.map((m, idx) => {
+                  const skipRatio = m.skip_ratio || 0;
+                  const saveRatio = m.save_ratio || 0;
+                  const radioPercent = m.radio_percent || 0;
+                  const qualityScore = (100 - skipRatio) * (saveRatio / 50) * (radioPercent / 50);
+                  const scoreColor = qualityScore < 30 ? 'text-red-400' : qualityScore < 60 ? 'text-yellow-400' : 'text-green-400';
+                  
+                  return (
+                    <div key={idx} className="bg-gray-900/50 border-2 border-red-700/30 rounded-lg p-5 hover:border-red-600/50 transition">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-bold text-white">{m.track_name}</h3>
+                          <p className="text-sm text-gray-400">{m.artist_name}</p>
+                          <p className="text-xs text-gray-500 mt-1">Added {m.days_since_release} days ago</p>
+                        </div>
+                        <div className={`text-3xl font-bold ${scoreColor}`}>{qualityScore.toFixed(0)}</div>
+                      </div>
+                      
+                      <div className="grid grid-cols-4 gap-3 mb-4">
+                        <div className="bg-gray-800/50 rounded p-3">
+                          <div className="text-xs text-gray-400">Skip %</div>
+                          <div className={`text-xl font-bold ${skipRatio > 60 ? 'text-red-400' : 'text-orange-400'}`}>{skipRatio.toFixed(0)}%</div>
+                        </div>
+                        <div className="bg-gray-800/50 rounded p-3">
+                          <div className="text-xs text-gray-400">Save %</div>
+                          <div className={`text-xl font-bold ${saveRatio < 20 ? 'text-red-400' : 'text-yellow-400'}`}>{saveRatio.toFixed(1)}%</div>
+                        </div>
+                        <div className="bg-gray-800/50 rounded p-3">
+                          <div className="text-xs text-gray-400">Radio %</div>
+                          <div className={`text-xl font-bold ${radioPercent < 10 ? 'text-red-400' : 'text-blue-400'}`}>{radioPercent.toFixed(1)}%</div>
+                        </div>
+                        <div className="bg-gray-800/50 rounded p-3">
+                          <div className="text-xs text-gray-400">Streams</div>
+                          <div className="text-xl font-bold text-green-400">{(m.streams || 0).toLocaleString()}</div>
+                        </div>
+                      </div>
+                      
+                      <div className="text-xs text-gray-500 text-center">Listeners: {(m.listeners || 0).toLocaleString()} | Saves: {(m.saves || 0).toLocaleString()}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              <div className="mt-8 flex gap-4 justify-center">
+                <button className="px-6 py-3 bg-green-600/40 text-green-300 border border-green-600 rounded-lg font-bold hover:bg-green-600/60 transition">✓ Keep Selected</button>
+                <button className="px-6 py-3 bg-red-600/40 text-red-300 border border-red-600 rounded-lg font-bold hover:bg-red-600/60 transition">✕ Confirm Removals</button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* TABLE FOR 'ALL' TAB */}
+      {activeTab === 'all' && metricsLoading ? (
         <div className="text-center py-8 text-gray-400">Loading...</div>
       ) : activeTab === 'group' && groupLoading ? (
         <div className="text-center py-8 text-gray-400">Loading group data...</div>
