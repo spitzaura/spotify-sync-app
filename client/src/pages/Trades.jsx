@@ -79,7 +79,6 @@ export default function Trades() {
   const fetchTrades = async () => {
     try {
       setLoading(true);
-      await api.cleanupTrades();
       setTrades(await api.getTrades());
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
