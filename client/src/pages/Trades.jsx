@@ -450,9 +450,24 @@ export default function Trades() {
   const handleTradeScan = async (trade) => {
     setScanningTradeId(trade.id);
     try {
-      // Get all synced playlists (trades are synced to all of them)
+      // Extract group names from trade notes or search all groups
+      const groupNames = [];
+      if (trade.notes?.includes('AFRO HOUSE')) groupNames.push('AFRO HOUSE');
+      if (trade.notes?.includes('model')) groupNames.push('model');
+      if (trade.notes?.includes('woman power')) groupNames.push('woman power');
+      if (trade.notes?.includes('focus')) groupNames.push('focus-cleaning');
+      if (trade.notes?.includes('techno')) groupNames.push('techno');
+      if (trade.notes?.includes('lounge')) groupNames.push('lounge');
+      if (trade.notes?.includes('WORKOUT')) groupNames.push('WORKOUT');
+      
+      // Get all synced playlists
       const res = await fetch(`/api/trades/count-playlists`);
-      const found = await res.json();
+      const allPlaylists = await res.json();
+      
+      // Filter to only playlists from the trade's groups
+      const found = allPlaylists.filter(p => 
+        groupNames.length === 0 || groupNames.some(g => p.groupName.toUpperCase().includes(g.toUpperCase()))
+      );
       
       setTradeScanResults(prev => ({ ...prev, [trade.id]: found }));
     } catch (err) {
