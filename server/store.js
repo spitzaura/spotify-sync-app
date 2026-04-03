@@ -192,7 +192,7 @@ function getActiveTrades() {
 }
 
 function getExpiredActiveTrades() {
-  return db.prepare("SELECT * FROM trades WHERE status = 'active' AND expires_at < datetime('now')").all();
+  return db.prepare("SELECT * FROM trades WHERE (status = 'active' AND expires_at < datetime('now')) OR status = 'expired'").all();
 }
 
 function getTradeById(id) {
