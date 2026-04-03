@@ -1079,17 +1079,14 @@ export default function Trades() {
         </div>
       )}
 
-      {showPicker && (
-        <PlaylistPicker accounts={accounts}
-          excludeIds={selectedPlaylists.map(p => p.playlistId)}
-          onSelect={d => { setSelectedPlaylists(prev => [...prev.filter(p => p.playlistId !== d.playlistId), d]); }}
-          onCancel={() => setShowPicker(false)} />
-      )}
-
-      {/* PAST TRADES LIST */}
-      {!loading && trades.length > 0 && (
-        <div className="mt-12 bg-gray-800/30 border border-purple-900/30 rounded-lg p-6">
-          <h2 className="text-2xl font-bold text-white mb-4">📋 Past Trades ({trades.length})</h2>
+      {/* ALL TRADES LIST */}
+      <div className="mt-12 bg-gray-800/30 border border-purple-900/30 rounded-lg p-6">
+        <h2 className="text-2xl font-bold text-white mb-4">📋 All Trades ({trades.length})</h2>
+        {loading ? (
+          <p className="text-spotify-light">Loading...</p>
+        ) : trades.length === 0 ? (
+          <p className="text-spotify-light">No trades yet.</p>
+        ) : (
           <div className="space-y-3 max-h-96 overflow-y-auto">
             {trades.map(trade => {
               const now = new Date();
@@ -1120,7 +1117,14 @@ export default function Trades() {
               );
             })}
           </div>
-        </div>
+        )}
+      </div>
+
+      {showPicker && (
+        <PlaylistPicker accounts={accounts}
+          excludeIds={selectedPlaylists.map(p => p.playlistId)}
+          onSelect={d => { setSelectedPlaylists(prev => [...prev.filter(p => p.playlistId !== d.playlistId), d]); }}
+          onCancel={() => setShowPicker(false)} />
       )}
     </div>
   );
