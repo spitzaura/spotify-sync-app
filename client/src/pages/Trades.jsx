@@ -79,8 +79,10 @@ export default function Trades() {
   const fetchTrades = async () => {
     try {
       setLoading(true);
-      setTrades(await api.getTrades());
-    } catch (err) { console.error(err); }
+      const data = await api.getTrades();
+      console.log('[TRADES] Fetched:', data.length, 'trades');
+      setTrades(data);
+    } catch (err) { console.error('[TRADES ERROR]', err); }
     finally { setLoading(false); }
   };
 
